@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  mysql_database:
+    image: mysql:8.0
+    restart: always
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: P@ssw0rd123@
+      MYSQL_DATABASE: wp_db
+      MYSQL_USER: wp_user
+      MYSQL_PASSWORD: P@ssw0rd123@
+    volumes:
+      - mysql:/var/lib/mysql
+
+  phpmyadmin:
+    depends_on: 
+      - mysql_database
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 9090:80
+    environment:
+      PMA_HOST: mysql_database
+      MYSQL_ROOT_PASSWORD: P@ssw0rd123@
+
+  php:
+    depends_on: 
+      - mysql_database
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    container_name: php
+    environment:
+      WORDPRESS_DB_HOST: mysql_database
+      WORDPRESS_DB_USER: wp_user
+      WORDPRESS_DB_PASSWORD: 1234
+      WORDPRESS_DB_NAME: wp_db
+    volumes:
+      - wordpress:/var/www/html
+
+  nginx:
+    depends_on:
+      - php
+    build:
+      context: ./
+      dockerfile: dockerfile-nginx
+    restart: always
+    ports:
+      - 8000:80
+    volumes:
+      - wordpress:/usr/share/nginx/html
+
+volumes:
+  wordpress:
+  mysql:
